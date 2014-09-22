@@ -109,7 +109,7 @@ var validation = map[AttributeType]Validation{
 	Class:                  {},
 	VendorSpecific:         {STRING, 1, UNLIMITED, nil},
 	SessionTimeout:         {},
-	IdleTimeout:            {},
+	IdleTimeout:            {STRING, 1, UNLIMITED, nil},
 	TerminationAction:      {},
 	CalledStationId:        {STRING, 1, UNLIMITED, nil},
 	CallingStationId:       {STRING, 1, UNLIMITED, nil},
