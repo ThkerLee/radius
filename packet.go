@@ -4,6 +4,7 @@ import (
 	"crypto"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"log"
 	"net"
 )
@@ -57,7 +58,7 @@ const (
 	IdleTimeout            AttributeType = iota
 	TerminationAction      AttributeType = iota
 	CalledStationId        AttributeType = iota
-	CallingStationId       AttributeType = iota
+	CallingStationId       AttributeType = iota //31
 	NASIdentifier          AttributeType = iota
 	ProxyState             AttributeType = iota
 	LoginLATService        AttributeType = iota
@@ -67,7 +68,7 @@ const (
 	FramedAppleTalkNetwork AttributeType = iota
 	FramedAppleTalkZone    AttributeType = iota
 	AcctStatusType         AttributeType = iota
-	AcctDelayTime          AttributeType = iota
+	AcctDelayTime          AttributeType = iota //41
 	AcctInputOctets        AttributeType = iota
 	AcctOutputOctets       AttributeType = iota
 	AcctSessionId          AttributeType = iota
@@ -350,7 +351,7 @@ func (a AttributeType) String() string {
 	case MessageAuthenticator:
 		return "MessageAuthenticator"
 	}
-	return "unknown attribute type"
+	return fmt.Sprintf("Unspecified attribute No. %d", a)
 }
 
 func (p PacketCode) String() string {

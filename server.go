@@ -56,11 +56,11 @@ func (s *Server) ListenAndServe() error {
 			return err
 		}
 
-		ips := pac.Attributes(NASIPAddress)
+		// ips := pac.Attributes(NASIPAddress)
 
-		if len(ips) != 1 {
-			continue
-		}
+		// if len(ips) != 1 {
+		// 	log.Println("lenght of nas ip not 1")
+		// }
 
 		npac, err := s.service.Authenticate(pac)
 		if err != nil {
