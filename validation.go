@@ -132,7 +132,7 @@ var validation = map[AttributeType]Validation{
 	AcctOutputPackets:      {STRING, 1, UNLIMITED, nil},
 	AcctTerminateCause:     {STRING, 1, UNLIMITED, nil},
 	AcctMultiSessionId:     {},
-	AcctLinkCount:          {},
+	AcctLinkCount:          {STRING, 1, UNLIMITED, nil},
 	EventTimestamp:         {STRING, 1, UNLIMITED, nil},
 
 	CHAPChallenge:       {STRING, 1, UNLIMITED, nil},
