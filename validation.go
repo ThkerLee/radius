@@ -144,6 +144,7 @@ var validation = map[AttributeType]Validation{
 	LoginLATPort:        {},
 	AcctInputGigawords:  {STRING, 1, UNLIMITED, nil},
 	AcctOutputGigawords: {STRING, 1, UNLIMITED, nil},
+	ConnectInfo:         {STRING, 1, UNLIMITED, nil},
 }
 
 /*

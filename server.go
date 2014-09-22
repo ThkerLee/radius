@@ -1,6 +1,7 @@
 package radius
 
 import (
+	"log"
 	"net"
 )
 
@@ -46,14 +47,14 @@ func (s *Server) ListenAndServe() error {
 	for {
 		n, addr, err := conn.ReadFrom(b[:])
 		if err != nil {
-			return err
+			log.Printf("Radius err %s\n", err)
 		}
 
 		p := b[:n]
 		pac := &Packet{server: s}
 		err = pac.Decode(p)
 		if err != nil {
-			return err
+			log.Printf("Radius err %s\n", err)
 		}
 
 		// ips := pac.Attributes(NASIPAddress)
@@ -64,11 +65,11 @@ func (s *Server) ListenAndServe() error {
 
 		npac, err := s.service.Authenticate(pac)
 		if err != nil {
-			return err
+			log.Printf("Radius err %s\n", err)
 		}
 		err = npac.Send(conn, addr)
 		if err != nil {
-			return err
+			log.Printf("Radius err %s\n", err)
 		}
 	}
 	return nil
