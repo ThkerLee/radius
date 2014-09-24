@@ -4,22 +4,25 @@ import (
 	"bytes"
 	"crypto"
 	_ "crypto/md5"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"net"
+	"strings"
 	"time"
 )
 
 type AttributeDataType uint8
 
 const (
-	_                         = iota
-	TEXT    AttributeDataType = iota
-	STRING  AttributeDataType = iota
-	ADDRESS AttributeDataType = iota
-	VALUE   AttributeDataType = iota
-	INTEGER AttributeDataType = iota
-	TIME    AttributeDataType = iota
+	UNSPECIFIED AttributeDataType = iota
+	TEXT        AttributeDataType = iota
+	STRING      AttributeDataType = iota
+	ADDRESS     AttributeDataType = iota
+	MAC         AttributeDataType = iota
+	VALUE       AttributeDataType = iota
+	INTEGER     AttributeDataType = iota
+	TIME        AttributeDataType = iota
 )
 
 const (
@@ -35,9 +38,20 @@ type Validation struct {
 
 func (a AVP) Binary() ([]byte, error)    { return a.Value, nil }
 func (a AVP) Address() (net.Addr, error) { return nil, nil }
-func (a AVP) Integer() (uint32, error)   { return 0, nil }
-func (a AVP) Time() (time.Time, error)   { return time.Time{}, nil }
-func (a AVP) Text() (string, error)      { return "", nil }
+func (a AVP) Integer() (int64, error) {
+	r := bytes.NewReader(a.Value)
+	return binary.ReadVarint(r)
+}
+func (a AVP) Time() (time.Time, error) { return time.Time{}, nil }
+func (a AVP) Text() (string, error)    { return string(a.text), nil }
+func (a AVP) Mac() (net.HardwareAddr, error) {
+	s := string(a.Value)
+	s = strings.Replace(s, "-", ".", -1)
+	return net.ParseMAC(s)
+}
+func (a AVP) IP() (net.IP, error) {
+	return net.IPv4(a.Value[0], a.Value[1], a.Value[2], a.Value[3]), nil
+}
 
 func (v Validation) Validate(p *Packet, attr *AVP) error {
 
@@ -47,15 +61,6 @@ func (v Validation) Validate(p *Packet, attr *AVP) error {
 
 	if v.MaxLength != UNLIMITED && len(attr.Value) > v.MaxLength {
 		return fmt.Errorf("value too long: test %d against %d", len(attr.Value), v.MaxLength)
-	}
-
-	switch v.Kind {
-	case TEXT:
-	case STRING:
-	case ADDRESS:
-	case VALUE:
-	case INTEGER:
-	case TIME:
 	}
 
 	if v.Decode != nil {
@@ -83,15 +88,15 @@ func DecodeUserPassword(p *Packet, a *AVP) error {
 }
 
 var validation = map[AttributeType]Validation{
-	UserName:               {STRING, 1, UNLIMITED, nil},
-	UserPassword:           {STRING, 16, 128, DecodeUserPassword},
-	CHAPPassword:           {STRING, 17, 17, nil},
+	UserName:               {UNSPECIFIED, 1, UNLIMITED, nil},
+	UserPassword:           {UNSPECIFIED, 16, 128, DecodeUserPassword},
+	CHAPPassword:           {UNSPECIFIED, 17, 17, nil},
 	NASIPAddress:           {ADDRESS, 4, 4, nil},
 	NASPort:                {VALUE, 4, 4, nil},
-	MessageAuthenticator:   {STRING, 1, UNLIMITED, nil},
-	ServiceType:            {STRING, 1, UNLIMITED, nil},
-	FramedProtocol:         {STRING, 1, UNLIMITED, nil},
-	FramedIPAddress:        {STRING, 1, UNLIMITED, nil},
+	MessageAuthenticator:   {UNSPECIFIED, 1, UNLIMITED, nil},
+	ServiceType:            {UNSPECIFIED, 1, UNLIMITED, nil},
+	FramedProtocol:         {UNSPECIFIED, 1, UNLIMITED, nil},
+	FramedIPAddress:        {UNSPECIFIED, 1, UNLIMITED, nil},
 	FramedIPNetmask:        {},
 	FramedRouting:          {},
 	FilterId:               {},
@@ -107,13 +112,13 @@ var validation = map[AttributeType]Validation{
 	FramedIPXNetwork:       {},
 	State:                  {},
 	Class:                  {},
-	VendorSpecific:         {STRING, 1, UNLIMITED, nil},
-	SessionTimeout:         {STRING, 1, UNLIMITED, nil},
-	IdleTimeout:            {STRING, 1, UNLIMITED, nil},
+	VendorSpecific:         {UNSPECIFIED, 1, UNLIMITED, nil},
+	SessionTimeout:         {UNSPECIFIED, 1, UNLIMITED, nil},
+	IdleTimeout:            {UNSPECIFIED, 1, UNLIMITED, nil},
 	TerminationAction:      {},
-	CalledStationId:        {STRING, 1, UNLIMITED, nil},
-	CallingStationId:       {STRING, 1, UNLIMITED, nil},
-	NASIdentifier:          {STRING, 1, UNLIMITED, nil},
+	CalledStationId:        {MAC, 1, UNLIMITED, nil},
+	CallingStationId:       {UNSPECIFIED, 1, UNLIMITED, nil},
+	NASIdentifier:          {UNSPECIFIED, 1, UNLIMITED, nil},
 	ProxyState:             {},
 	LoginLATService:        {},
 	LoginLATNode:           {},
@@ -121,30 +126,30 @@ var validation = map[AttributeType]Validation{
 	FramedAppleTalkLink:    {},
 	FramedAppleTalkNetwork: {},
 	FramedAppleTalkZone:    {},
-	AcctStatusType:         {STRING, 1, UNLIMITED, nil},
-	AcctDelayTime:          {STRING, 1, UNLIMITED, nil},
-	AcctInputOctets:        {STRING, 1, UNLIMITED, nil},
-	AcctOutputOctets:       {STRING, 1, UNLIMITED, nil},
-	AcctSessionId:          {STRING, 1, UNLIMITED, nil},
-	AcctAuthentic:          {STRING, 1, UNLIMITED, nil},
-	AcctSessionTime:        {STRING, 1, UNLIMITED, nil},
-	AcctInputPackets:       {STRING, 1, UNLIMITED, nil},
-	AcctOutputPackets:      {STRING, 1, UNLIMITED, nil},
-	AcctTerminateCause:     {STRING, 1, UNLIMITED, nil},
+	AcctStatusType:         {INTEGER, 1, UNLIMITED, nil},
+	AcctDelayTime:          {UNSPECIFIED, 1, UNLIMITED, nil},
+	AcctInputOctets:        {UNSPECIFIED, 1, UNLIMITED, nil},
+	AcctOutputOctets:       {UNSPECIFIED, 1, UNLIMITED, nil},
+	AcctSessionId:          {UNSPECIFIED, 1, UNLIMITED, nil},
+	AcctAuthentic:          {UNSPECIFIED, 1, UNLIMITED, nil},
+	AcctSessionTime:        {UNSPECIFIED, 1, UNLIMITED, nil},
+	AcctInputPackets:       {UNSPECIFIED, 1, UNLIMITED, nil},
+	AcctOutputPackets:      {UNSPECIFIED, 1, UNLIMITED, nil},
+	AcctTerminateCause:     {UNSPECIFIED, 1, UNLIMITED, nil},
 	AcctMultiSessionId:     {},
-	AcctLinkCount:          {STRING, 1, UNLIMITED, nil},
-	EventTimestamp:         {STRING, 1, UNLIMITED, nil},
+	AcctLinkCount:          {UNSPECIFIED, 1, UNLIMITED, nil},
+	EventTimestamp:         {UNSPECIFIED, 1, UNLIMITED, nil},
 
-	CHAPChallenge:       {STRING, 1, UNLIMITED, nil},
-	NASPortType:         {STRING, 1, UNLIMITED, nil},
-	NASPortId:           {STRING, 1, UNLIMITED, nil},
-	LocationInformation: {STRING, 1, UNLIMITED, nil},
-	LocationData:        {STRING, 1, UNLIMITED, nil},
+	CHAPChallenge:       {UNSPECIFIED, 1, UNLIMITED, nil},
+	NASPortType:         {UNSPECIFIED, 1, UNLIMITED, nil},
+	NASPortId:           {UNSPECIFIED, 1, UNLIMITED, nil},
+	LocationInformation: {UNSPECIFIED, 1, UNLIMITED, nil},
+	LocationData:        {UNSPECIFIED, 1, UNLIMITED, nil},
 	PortLimit:           {},
 	LoginLATPort:        {},
-	AcctInputGigawords:  {STRING, 1, UNLIMITED, nil},
-	AcctOutputGigawords: {STRING, 1, UNLIMITED, nil},
-	ConnectInfo:         {STRING, 1, UNLIMITED, nil},
+	AcctInputGigawords:  {UNSPECIFIED, 1, UNLIMITED, nil},
+	AcctOutputGigawords: {UNSPECIFIED, 1, UNLIMITED, nil},
+	ConnectInfo:         {UNSPECIFIED, 1, UNLIMITED, nil},
 }
 
 /*
