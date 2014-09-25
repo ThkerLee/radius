@@ -202,6 +202,7 @@ const (
 
 type Packet struct {
 	server        *Server
+	nas           net.Addr
 	Code          PacketCode
 	Identifier    uint8
 	Authenticator [16]byte
@@ -486,4 +487,11 @@ func (p *Packet) Decode(buf []byte) error {
 		b = b[length:]
 	}
 	return nil
+}
+
+func (p *Packet) NasIP() net.IP {
+	if ua, ok := p.nas.(*net.UDPAddr); ok {
+		return ua.IP
+	}
+	return net.ParseIP(p.nas.String())
 }

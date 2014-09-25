@@ -51,7 +51,7 @@ func (s *Server) ListenAndServe() error {
 		}
 
 		p := b[:n]
-		pac := &Packet{server: s}
+		pac := &Packet{server: s, nas: addr}
 		err = pac.Decode(p)
 		if err != nil {
 			log.Printf("Radius err %s\n", err)
