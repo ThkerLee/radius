@@ -38,9 +38,9 @@ type Validation struct {
 
 func (a AVP) Binary() ([]byte, error)    { return a.Value, nil }
 func (a AVP) Address() (net.Addr, error) { return nil, nil }
-func (a AVP) Integer() (int64, error) {
-	r := bytes.NewReader(a.Value)
-	return binary.ReadVarint(r)
+func (a AVP) Integer() (int, error) {
+	i := binary.BigEndian.Uint32(a.Value)
+	return int(i), nil
 }
 func (a AVP) Time() (time.Time, error) { return time.Time{}, nil }
 func (a AVP) Text() (string, error)    { return string(a.text), nil }
