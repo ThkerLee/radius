@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"log"
 	"net"
 )
 
@@ -479,7 +478,6 @@ func (p *Packet) Decode(buf []byte) error {
 		}
 		attr.Value = append(attr.Value, b[2:length]...)
 		validator := validation[attr.Type]
-		log.Println(attr.Type, validator)
 		if err := validator.Validate(p, &attr); err != nil {
 			return err
 		}

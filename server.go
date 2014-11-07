@@ -52,25 +52,21 @@ func (s *Server) ListenAndServe() error {
 
 		p := b[:n]
 		pac := &Packet{server: s, nas: addr}
-		err = pac.Decode(p)
-		if err != nil {
-			log.Printf("Radius err %s\n", err)
-		}
+		go func(pac *Packet) {
+			err = pac.Decode(p)
+			if err != nil {
+				log.Printf("Radius err %s\n", err)
+			}
 
-		// ips := pac.Attributes(NASIPAddress)
-
-		// if len(ips) != 1 {
-		// 	log.Println("lenght of nas ip not 1")
-		// }
-
-		npac, err := s.service.Authenticate(pac)
-		if err != nil {
-			log.Printf("Radius err %s\n", err)
-		}
-		err = npac.Send(conn, addr)
-		if err != nil {
-			log.Printf("Radius err %s\n", err)
-		}
+			npac, err := s.service.Authenticate(pac)
+			if err != nil {
+				log.Printf("Radius err %s\n", err)
+			}
+			err = npac.Send(conn, addr)
+			if err != nil {
+				log.Printf("Radius err %s\n", err)
+			}
+		}(pac)
 	}
 	return nil
 }
